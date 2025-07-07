@@ -1,0 +1,79 @@
+; PB0 pressed ? PA0 blinks
+; PB1 pressed ? PA1 ON
+; Neither ? Both OFF
+
+DATA SEGMENT
+PORTA     EQU 00H
+PORTB     EQU 02H
+PORTC     EQU 04H
+PORT_CON  EQU 06H
+DATA ENDS
+
+CODE SEGMENT
+ASSUME CS:CODE, DS:DATA
+ORG 0000H
+
+START:
+MOV AX, DATA
+MOV DS, AX
+
+; 8255 setup: Port A output, Port B input
+MOV DX, PORT_CON
+MOV AL, 82H
+OUT DX, AL
+
+MAIN_LOOP:
+; Read PORTB (PB0 = bit 0, PB1 = bit 1)
+MOV DX, PORTB
+IN AL, DX
+
+; Copy AL to two registers for masking
+MOV BL, AL      ; For PB0
+MOV BH, AL      ; For PB1
+
+; --- Check PB1 ---
+AND BH, 02H     ; Mask bit 1
+CMP BH, 02H
+JE PB1_ON
+
+; --- Check PB0 ---
+AND BL, 01H     ; Mask bit 0
+CMP BL, 01H
+JE PB0_BLINK
+
+; Neither pressed ? all OFF
+MOV AL, 00H
+MOV DX, PORTA
+OUT DX, AL
+JMP MAIN_LOOP
+
+PB1_ON:
+; Set PA1 = ON (00000010b)
+MOV AL, 02H
+MOV DX, PORTA
+OUT DX, AL
+JMP MAIN_LOOP
+
+PB0_BLINK:
+; Blink PA0 only
+MOV AL, 01H     ; PA0 ON
+MOV DX, PORTA
+OUT DX, AL
+CALL DELAY
+
+MOV AL, 00H     ; PA0 OFF
+OUT DX, AL
+CALL DELAY
+
+JMP MAIN_LOOP
+
+; --- Delay ---
+DELAY:
+MOV CX, 0FFFFH
+D1: LOOP D1
+RET
+
+CODE ENDS
+END START
+
+

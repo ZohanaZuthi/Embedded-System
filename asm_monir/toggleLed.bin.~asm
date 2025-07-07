@@ -1,0 +1,63 @@
+; Toggle PA0 on each press of PB0
+
+DATA SEGMENT
+PORTA     EQU 00H
+PORTB     EQU 02H
+PORTC     EQU 04H
+PORT_CON  EQU 06H
+
+LED_STATE DB 00H       ; Stores current LED state (ON/OFF)
+PREV_BTN  DB 00H       ; Stores previous button state (for edge detection)
+
+DATA ENDS
+
+CODE SEGMENT
+ASSUME CS:CODE, DS:DATA
+
+ORG 0000H
+
+START:
+MOV AX, DATA
+MOV DS, AX
+
+; Configure 8255: Port A = Output, Port B = Input, Port C = Output
+MOV DX, PORT_CON
+MOV AL, 82H
+OUT DX, AL
+
+MAIN_LOOP:
+; Read current button state (PB0)
+MOV DX, PORTB
+IN AL, DX
+AND AL, 01H           ; Mask PB0 only
+MOV BL, AL            ; Store current PB0 state in BL
+
+; Read previous button state
+MOV AL, PREV_BTN
+CMP AL, 00H
+JNE STORE_CURRENT     ; Skip toggle if previous was already pressed
+
+; If previous == 0 and current == 1 ? toggle needed
+CMP BL, 01H
+JNE STORE_CURRENT     ; If current not pressed, do nothing
+
+; Toggle LED state
+MOV AL, LED_STATE
+XOR AL, 01H           ; Toggle bit 0
+MOV LED_STATE, AL     ; Save new state
+
+; Output to PA0
+MOV DX, PORTA
+OUT DX, AL
+
+STORE_CURRENT:
+; Update previous button state
+MOV AL, BL
+MOV PREV_BTN, AL
+
+JMP MAIN_LOOP
+
+CODE ENDS
+END START
+
+

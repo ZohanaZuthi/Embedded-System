@@ -1,0 +1,86 @@
+; PB0 every press: PA0 ON, PA0 OFF, PA1 ON, PA1 OFF, repeat...
+
+DATA SEGMENT
+PORTA     EQU 00H
+PORTB     EQU 02H
+PORTC     EQU 04H
+PORT_CON  EQU 06H
+
+PRESS_COUNT DB 00H     ; 0 to 3 then repeat
+PREV_BTN    DB 00H     ; previous state of PB0
+
+DATA ENDS
+
+CODE SEGMENT
+ASSUME CS:CODE, DS:DATA
+
+ORG 0000H
+
+START:
+MOV AX, DATA
+MOV DS, AX
+
+; Initialize 8255: Port A = output, Port B = input
+MOV DX, PORT_CON
+MOV AL, 82H
+OUT DX, AL
+
+MAIN_LOOP:
+; Read PB0
+MOV DX, PORTB
+IN AL, DX
+AND AL, 01H          ; Mask PB0 only
+MOV BL, AL           ; BL = current PB0 state
+
+; Check previous state
+MOV AL, PREV_BTN
+CMP AL, 00H
+JNE STORE_PREV       ; Skip if previously pressed
+
+; If rising edge
+CMP BL, 01H
+JNE STORE_PREV
+
+; --- Handle press count (0?1?2?3?repeat) ---
+MOV AL, PRESS_COUNT
+INC AL
+AND AL, 03H           ; keep in 0–3 range (mod 4)
+MOV PRESS_COUNT, AL
+
+; --- Set PORTA based on count ---
+CMP AL, 00H
+JE LED_PA0_ON
+CMP AL, 01H
+JE LED_ALL_OFF_1
+CMP AL, 02H
+JE LED_PA1_ON
+CMP AL, 03H
+JE LED_ALL_OFF_2
+
+LED_PA0_ON:
+MOV AL, 01H           ; 00000001b ? PA0 ON
+JMP WRITE_OUT
+
+LED_ALL_OFF_1:
+LED_ALL_OFF_2:
+MOV AL, 00H           ; All OFF
+JMP WRITE_OUT
+
+LED_PA1_ON:
+MOV AL, 02H           ; 00000010b ? PA1 ON
+
+WRITE_OUT:
+MOV DX, PORTA
+OUT DX, AL
+
+STORE_PREV:
+; Update previous PB0 state
+MOV AL, BL
+MOV PREV_BTN, AL
+
+JMP MAIN_LOOP
+
+CODE ENDS
+END START
+
+

@@ -1,0 +1,66 @@
+DATA SEGMENT
+PORTA     EQU 00H
+PORTB     EQU 02H
+PORTC     EQU 04H
+PORT_CON  EQU 06H
+DATA ENDS
+
+CODE SEGMENT
+ASSUME CS:CODE, DS:DATA
+
+ORG 0000H
+
+START:
+MOV AX, DATA
+MOV DS, AX
+
+; Initialize 8255: PA = output, PB = input, PC = output (mode 0)
+MOV DX, PORT_CON
+MOV AL, 82H         ; 10000010b
+OUT DX, AL
+
+MAIN_LOOP:
+; Read Port B
+MOV DX, PORTB
+IN AL, DX
+
+; Check PB0 and PB1
+AND AL, 03H         ; Mask bits 0 and 1
+CMP AL, 03H         ; Are both pressed?
+JNE LED_OFF         ; If not, turn off LEDs
+
+; Turn ON both PA0 and PA1
+MOV AL, 03H         ; 00000011b ? PA0 & PA1 ON
+MOV DX, PORTA
+OUT DX, AL
+CALL DELAY
+
+; Turn OFF both
+MOV AL, 00H
+OUT DX, AL
+CALL DELAY
+
+
+JMP MAIN_LOOP       ; Repeat
+
+LED_OFF:
+; Turn OFF all LEDs
+MOV AL, 00H
+MOV DX, PORTA
+OUT DX, AL
+JMP MAIN_LOOP
+
+;-------------------------
+; Simple delay
+DELAY PROC
+MOV CX, 0FFFFH
+DELAY_LOOP:
+NOP
+LOOP DELAY_LOOP
+RET
+DELAY ENDP
+
+CODE ENDS
+END START
+
+

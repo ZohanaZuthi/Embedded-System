@@ -1,0 +1,51 @@
+
+; 1 Push Button, 2 LEDs Control
+; LED1 = PA0, LED2 = PA1
+; Button = PB0 on one LED on another off.
+
+
+DATA SEGMENT
+PORTA EQU 00H
+PORTB EQU 02H
+PORTC EQU 04H
+PORT_CON EQU 06H
+DATA ENDS
+
+CODE SEGMENT
+ASSUME CS:CODE,DS:DATA
+
+START:
+MOV AX, DATA
+MOV DS, AX
+
+; Set Port A & C as output, Port B as input, Mode 0
+MOV DX, PORT_CON
+MOV AL, 10000010B
+OUT DX, AL
+
+MAIN_LOOP:
+; Read Port B(button input)
+MOV DX, PORTB
+IN AL, DX
+AND AL,00000001B      ; Mask only PB0 (bit 0)
+
+CMP AL, 1           ; Check if button is pressed (0 =pressed)
+JE BUTTON_RELEASED
+
+BUTTON_PRESSED:
+; LED1 ON (PA0 = 1), LED2 OFF (PA1 = 0)
+MOV AL, 00000001B
+MOV DX, PORTA
+OUT DX, AL
+JMP MAIN_LOOP
+
+BUTTON_RELEASED:
+; LED1 OFF (PA0 =0), LED2 ON (PA1 = 1)
+MOV AL, 00000010B
+MOV DX, PORTA
+OUT DX, AL
+JMP MAIN_LOOP
+
+CODE ENDS
+END START
+

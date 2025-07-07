@@ -1,0 +1,73 @@
+; PB0 pressed  ? PA0 blinks, PA1 ON
+; PB0 released ? Both OFF
+
+DATA SEGMENT
+PORTA     EQU 00H
+PORTB     EQU 02H
+PORTC     EQU 04H
+PORT_CON  EQU 06H
+
+DATA ENDS
+
+CODE SEGMENT
+ASSUME CS:CODE, DS:DATA
+
+ORG 0000H
+
+START:
+MOV AX, DATA
+MOV DS, AX
+
+; Initialize 8255
+MOV DX, PORT_CON
+MOV AL, 82H         ; Port A = output, Port B = input, Mode 0
+OUT DX, AL
+
+MAIN_LOOP:
+; Read PB0
+MOV DX, PORTB
+IN AL, DX
+AND AL, 01H         ; Mask PB0 only
+
+CMP AL, 01H
+JE BLINK_AND_ON     ; If pressed ? blink PA0, PA1 ON
+
+; Else, both LEDs OFF
+MOV AL, 00H
+MOV DX, PORTA
+OUT DX, AL
+JMP MAIN_LOOP
+
+; --- Blinking PA0 + PA1 ON routine ---
+BLINK_AND_ON:
+; Step 1: Turn PA0 ON, PA1 ON ? 00000011b = 03H
+MOV AL, 03H
+MOV DX, PORTA
+OUT DX, AL
+CALL DELAY
+
+; Step 2: Turn PA0 OFF, PA1 ON ? 00000010b = 02H
+MOV AL, 02H
+MOV DX, PORTA
+OUT DX, AL
+CALL DELAY
+
+; Re-check PB0 status
+MOV DX, PORTB
+IN AL, DX
+AND AL, 01H
+CMP AL, 01H
+JE BLINK_AND_ON
+
+JMP MAIN_LOOP
+
+; --- Simple delay routine ---
+DELAY:
+MOV CX, 0FFFFH
+D1: LOOP D1
+RET
+
+CODE ENDS
+END START
+
+

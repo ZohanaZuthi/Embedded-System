@@ -1,0 +1,98 @@
+; Turn on LED on PA0 when both buttons on PB0 and PB1 are pressed
+
+DATA SEGMENT
+PORTA     EQU 00H
+PORTB     EQU 02H
+PORTC     EQU 04H
+PORT_CON  EQU 06H
+DATA ENDS
+
+CODE SEGMENT
+ASSUME CS:CODE, DS:DATA
+
+ORG 0000H
+
+START:
+MOV AX, DATA
+MOV DS, AX
+
+; Set 8255: Port A = output, Port B = input, Port C = output (mode 0)
+MOV DX, PORT_CON
+MOV AL, 82H         ; 10000010b
+OUT DX, AL
+
+WHILE:
+; Read from Port B
+MOV DX, PORTB
+IN AL, DX
+
+; Check if both PB0 and PB1 are 1 (buttons pressed)
+AND AL, 03H         ; mask bits 0 and 1
+CMP AL, 03H
+JNE OFF
+
+; Turn ON LED on PA0
+MOV AL, 01H
+MOV DX, PORTA
+OUT DX, AL
+JMP WHILE
+
+OFF:
+; Turn OFF LED
+MOV AL, 00H
+MOV DX, PORTA
+OUT DX, AL
+JMP WHILE
+
+CODE ENDS
+END START
+; Turn on LED on PA0 when both buttons on PB0 and PB1 are pressed
+
+DATA SEGMENT
+PORTA     EQU 00H
+PORTB     EQU 02H
+PORTC     EQU 04H
+PORT_CON  EQU 06H
+DATA ENDS
+
+CODE SEGMENT
+ASSUME CS:CODE, DS:DATA
+
+ORG 0000H
+
+START:
+MOV AX, DATA
+MOV DS, AX
+
+; Set 8255: Port A = output, Port B = input, Port C = output (mode 0)
+MOV DX, PORT_CON
+MOV AL, 82H         ; 10000010b
+OUT DX, AL
+
+WHILE:
+; Read from Port B
+MOV DX, PORTB
+IN AL, DX
+
+; Check if both PB0 and PB1 are 1 (buttons pressed)
+AND AL, 03H         ; mask bits 0 and 1
+CMP AL, 03H
+JNE OFF
+
+; Turn ON LED on PA0
+MOV AL, 01H
+MOV DX, PORTA
+OUT DX, AL
+JMP WHILE
+
+OFF:
+; Turn OFF LED
+MOV AL, 00H
+MOV DX, PORTA
+OUT DX, AL
+JMP WHILE
+
+CODE ENDS
+END START
+
+

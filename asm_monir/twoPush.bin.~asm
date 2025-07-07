@@ -1,0 +1,42 @@
+; Turn on PA0 if PB0 is pressed
+; Turn on PA1 if PB1 is pressed
+
+DATA SEGMENT
+PORTA     EQU 00H
+PORTB     EQU 02H
+PORTC     EQU 04H
+PORT_CON  EQU 06H
+DATA ENDS
+
+CODE SEGMENT
+ASSUME CS:CODE, DS:DATA
+
+ORG 0000H
+
+START:
+MOV AX, DATA
+MOV DS, AX
+
+; Set 8255: Port A = output, Port B = input, Port C = output (Mode 0)
+MOV DX, PORT_CON
+MOV AL, 82H         ; 10000010b
+OUT DX, AL
+
+MAIN_LOOP:
+; Read input from Port B
+MOV DX, PORTB
+IN AL, DX
+
+; Mask PB0 and PB1 (bit 0 and bit 1)
+AND AL, 03H         ; 00000011b
+
+; Copy result to output register (PA0 and PA1)
+MOV DX, PORTA
+OUT DX, AL
+
+JMP MAIN_LOOP
+
+CODE ENDS
+END START
+
+
